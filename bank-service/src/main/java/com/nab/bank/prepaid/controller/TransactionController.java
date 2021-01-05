@@ -5,6 +5,9 @@ import com.nab.bank.prepaid.dto.ResultObjectV2;
 import com.nab.bank.prepaid.dto.TransactionDTO;
 import com.nab.bank.prepaid.service.TransactionService;
 import com.nab.bank.prepaid.specs.TransactionSpecs;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +28,12 @@ public class TransactionController extends BaseController {
     this.transactionService = transactionService;
   }
 
+  @ApiOperation(value = "searchTransaction", notes = "Search transaction of user", response = ResultObjectV2.class)
+  @ApiImplicitParams({
+      @ApiImplicitParam(name = "mobile", dataType = "string", paramType = "query"),
+      @ApiImplicitParam(name = "sort", value = "purchaseDate,desc", dataType = "java.lang.String", paramType = "query",
+          defaultValue = "purchaseDate,desc")
+  })
   @GetMapping()
   public @ResponseBody
   ResultObjectV2<List<TransactionDTO>> getTransactions(

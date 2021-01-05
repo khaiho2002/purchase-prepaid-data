@@ -17,13 +17,15 @@ public class BuyVoucherThread implements Runnable {
   private static final Logger logger = LogManager.getLogger(BuyVoucherThread.class);
 
   final ExternalRequestExecutor requestExecutor;
+  final String url;
   final String username;
   final String password;
   private TransactionEntity transaction;
   private TransactionRepository repository;
 
-  public BuyVoucherThread(ExternalRequestExecutor requestExecutor, String username, String password) {
+  public BuyVoucherThread(ExternalRequestExecutor requestExecutor, String url, String username, String password) {
     this.requestExecutor = requestExecutor;
+    this.url = url;
     this.username = username;
     this.password = password;
   }
@@ -45,14 +47,16 @@ public class BuyVoucherThread implements Runnable {
 
       long startTime = System.currentTimeMillis();
       ResponseEntity<BuyVoucherResponseDTO> responseEntity = requestExecutor
-          .execute("http://localhost:8081/v1/vouchers", HttpMethod.POST, username, password, requestDTO, BuyVoucherResponseDTO.class);
+          .execute(url, HttpMethod.POST, username, password, requestDTO, BuyVoucherResponseDTO.class);
 
       long endTime = System.currentTimeMillis();
 
       long duration = TimeUnit.MILLISECONDS.toSeconds(endTime - startTime);
       BuyVoucherResponseDTO response = responseEntity.getBody();
 
-      transaction.setCode(response.getCode());
+      if (response != null) {
+        transaction.setCode(response.getCode());
+      }
 
       if (duration < 30) {
         transaction.setStatus(TransactionStatus.COMPLETED);
@@ -60,10 +64,11 @@ public class BuyVoucherThread implements Runnable {
         transaction.setStatus(TransactionStatus.NOT_RESPONSE);
       }
 
-      logger.info(String.format("Buy voucher for mobile {0} with code {1} successfully", transaction.getMobile(), transaction.getCode()));
+      logger.info(String.format("Buy voucher for mobile %s with code %s successfully in %d seconds",
+          transaction.getMobile(), transaction.getCode(), duration));
     } catch (Exception ex) {
       transaction.setStatus(TransactionStatus.FAILED);
-      logger.error(String.format("Error white get voucher code for mobile {0}", transaction.getMobile()), ex);
+      logger.error(String.format("Error white get voucher code for mobile %s", transaction.getMobile()), ex);
     } finally {
       repository.save(transaction);
     }

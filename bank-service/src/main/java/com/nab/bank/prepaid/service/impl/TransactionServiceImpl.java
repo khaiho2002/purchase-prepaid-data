@@ -18,6 +18,7 @@ import javassist.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +33,15 @@ public class TransactionServiceImpl implements TransactionService {
   ExternalRequestExecutor requestExecutor;
   TransactionRepository repository;
   ModelMapper mapper;
+
+  @Value("${3rd.authentication.username}")
+  String partyUsername;
+
+  @Value("${3rd.authentication.password}")
+  String partyPassword;
+
+  @Value("${3rd.buy-voucher.url}")
+  String urlBuyVoucher;
 
   public TransactionServiceImpl(TransactionRepository repository,
       ExternalRequestExecutor requestExecutor) {
@@ -74,7 +84,7 @@ public class TransactionServiceImpl implements TransactionService {
       ExecutorService executor = Executors.newFixedThreadPool(5);
 
       for (TransactionEntity transaction : entityList) {
-        BuyVoucherThread buyVoucherThread = new BuyVoucherThread(requestExecutor, "", "")
+        BuyVoucherThread buyVoucherThread = new BuyVoucherThread(requestExecutor, urlBuyVoucher, partyUsername, partyPassword)
             .setTransaction(transaction)
             .setRepository(repository);
         executor.submit(buyVoucherThread);
@@ -96,7 +106,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     if (entityList != null && !entityList.isEmpty()) {
       for (TransactionEntity transaction : entityList) {
-        logger.info(String.format("Send sms to mobile {0} with code {1} successfully", transaction.getMobile(), transaction.getCode()));
+        logger.info(String.format("Send sms to mobile %s with code %s successfully", transaction.getMobile(), transaction.getCode()));
         transaction.setStatus(TransactionStatus.SMS_OK);
       }
 

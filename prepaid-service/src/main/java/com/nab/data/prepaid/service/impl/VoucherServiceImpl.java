@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class VoucherServiceImpl implements VoucherService {
 
-  private static int LOW = 25;
-  private static int HIGH = 50;
+  private static int LOW = 3;
+  private static int HIGH = 120;
   private static final int VOUCHER_CODE_LENGTH = 10;
 
   @Override
